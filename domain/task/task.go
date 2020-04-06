@@ -25,9 +25,9 @@ type Task struct {
 	Topic       string
 	Description string
 	Status      Status
-	SubTasks    []SubTask
-	CreatedAt   time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt   time.Time `db:"updated_at" json:"updated_at"`
+	SubTasks    []*SubTask
+	CreatedAt   *time.Time
+	UpdatedAt   *time.Time
 }
 
 // Complete makes the task status Complete
@@ -41,7 +41,7 @@ func (t *Task) Complete() error {
 }
 
 // AddSubTask adds subTask to a task
-func (t *Task) AddSubTask(sbTsk SubTask) error {
+func (t *Task) AddSubTask(sbTsk *SubTask) error {
 	if t.Status == InActive || t.Status == Complete {
 		return errors.New("Can't add subTask to a inActvie Or complete task")
 	}

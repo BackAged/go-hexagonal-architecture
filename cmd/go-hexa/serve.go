@@ -3,13 +3,19 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/BackAged/go-hexagonal-architecture/configuration"
-	"github.com/spf13/cobra"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/BackAged/go-hexagonal-architecture/application/rest"
+	"github.com/BackAged/go-hexagonal-architecture/configuration"
+	"github.com/BackAged/go-hexagonal-architecture/domain/task"
+	"github.com/BackAged/go-hexagonal-architecture/infrastructure/database"
+	"github.com/BackAged/go-hexagonal-architecture/infrastructure/repository"
+	"github.com/go-chi/chi"
+	"github.com/spf13/cobra"
 )
 
 var serveCmd = &cobra.Command{
@@ -28,24 +34,24 @@ func serve(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// mgo, err := database.NewClient(cfg.Mongo.URI, cfg.Mongo.Database)
-	// if err != nil {
-	// 	return err
-	// }
+	rds, err := database.NewInMemoryClient(cfg.Redis.Host, cfg.Redis.Password, &cfg.Redis.DB)
+	if err != nil {
+		return err
+	}
 
-	// usrRepo := repo.NewMgoUser("users", mgo)
-	// tagRepo := repo.NewMgoTag("tags", mgo)
+	tskRepo := repository.NewTaskRepository(rds)
+	tskSvc := task.NewService(tskRepo)
+	tskHndlr := rest.NewHandler(tskSvc)
 
-	// svc := service.NewService(usrRepo, tagRepo)
+	r := chi.NewRouter()
+	r.Mount("/task", rest.TaskRouter(tskHndlr))
 	// r := svc.Route()
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	srv := &http.Server{
 		Addr:         addr,
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintln(w, "This is the people handler.")
-		}),
+		Handler:      r,
 	}
 
 	go func() {

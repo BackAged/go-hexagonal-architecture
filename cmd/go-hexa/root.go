@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Version defines version
 const (
 	Version = "unversioned"
 )

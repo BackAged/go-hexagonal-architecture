@@ -1,9 +1,10 @@
 package configuration
 
 import (
-	"gopkg.in/yaml.v2"
 	"log"
 	"os"
+
+	"gopkg.in/yaml.v2"
 )
 
 // Application holds application configurations
@@ -11,6 +12,7 @@ type Application struct {
 	Host            string `yaml:"host"`
 	Port            int    `yaml:"port"`
 	Mongo           Mongo  `yaml:"mongo"`
+	Redis           Redis  `yaml:"redis"`
 	GracefulTimeout int    `yaml:"graceful_timeout"`
 }
 
@@ -18,6 +20,13 @@ type Application struct {
 type Mongo struct {
 	URI      string `yaml:"uri"`
 	Database string `yaml:"database"`
+}
+
+// Redis holds redis configuration
+type Redis struct {
+	Host     string `yaml:"host"`
+	Password string `yaml:"password"`
+	DB       int    `yaml:"db"`
 }
 
 // Load loads config from path

@@ -3,4 +3,8 @@ port: 8000
 mongo:
   uri: "mongodb://root:secret@mongo:27017"
   database: "task"
+redis:
+  host: "localhost:6379"
+  password: ""
+  db: 0
 graceful_timeout: 15
