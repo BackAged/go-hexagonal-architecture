@@ -10,7 +10,8 @@ import (
 
 // Rows mongo rows
 type Rows struct {
-	si *redis.ScanIterator
+	si     *redis.ScanIterator
+	client *redis.Client
 }
 
 // Next gives redis iterator cursor next
@@ -30,8 +31,12 @@ func (r *Rows) Val() string {
 
 // Scan scans a value
 func (r *Rows) Scan(v interface{}) error {
-	val := r.si.Val()
-	return json.Unmarshal([]byte(val), v)
+	key := r.si.Val()
+	data, err := r.client.Get(key).Result()
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal([]byte(data), v)
 }
 
 // InMemoryClient holds redis client
@@ -71,7 +76,7 @@ func (c *InMemoryClient) FindOne(ctx context.Context, key string) (interface{}, 
 // Find finds something
 func (c *InMemoryClient) Find(ctx context.Context, key string) *Rows {
 	si := c.client.Scan(0, key, 0).Iterator()
-	return &Rows{si: si}
+	return &Rows{si: si, client: c.client}
 }
 
 // Update updates database

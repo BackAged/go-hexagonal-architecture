@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -12,14 +13,14 @@ import (
 )
 
 type jsonTask struct {
-	ID          string         `json:"ID"`
-	UserID      string         `json:"userID"`
-	Topic       string         `json:"topic"`
-	Description string         `json:"description"`
-	Status      string         `json:"status"`
-	SubTasks    []task.SubTask `json:"sub_task"`
-	CreatedAt   *time.Time     `json:"created_at"`
-	UpdatedAt   *time.Time     `json:"updated_at"`
+	ID          string          `json:"ID"`
+	UserID      string          `json:"userID"`
+	Topic       string          `json:"topic"`
+	Description string          `json:"description"`
+	Status      string          `json:"status"`
+	SubTasks    []*task.SubTask `json:"sub_task"`
+	CreatedAt   *time.Time      `json:"created_at"`
+	UpdatedAt   *time.Time      `json:"updated_at"`
 }
 
 func toJSON(tsk *task.Task) *jsonTask {
@@ -71,13 +72,16 @@ func (tr *taskRepository) Add(ctx context.Context, tsk *task.Task) error {
 	}
 	key := tr.makeKey(tsk.ID, tsk.UserID)
 
-	jsnTsk := toJSON(tsk)
-
 	now := time.Now()
-	jsnTsk.CreatedAt = &now
-	jsnTsk.UpdatedAt = &now
+	tsk.CreatedAt = &now
+	tsk.UpdatedAt = &now
 
-	err := tr.client.Insert(ctx, key, jsnTsk, 0)
+	jsnTsk, err := json.Marshal(toJSON(tsk))
+	if err != nil {
+		return err
+	}
+
+	err = tr.client.Insert(ctx, key, jsnTsk, 0)
 	if err != nil {
 		return err
 	}
@@ -93,9 +97,8 @@ func (tr *taskRepository) FindByID(ctx context.Context, tskID string) (*task.Tas
 
 	rows := tr.client.Find(ctx, key)
 	if rows.Next() {
-		fmt.Println("herer")
 		if err := rows.Scan(&tsk); err != nil {
-			fmt.Println(err)
+			fmt.Println("here", err)
 			return nil, err
 		}
 	} else {

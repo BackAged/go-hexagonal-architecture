@@ -1,5 +1,25 @@
 version: "3.1"
 services:
+  task:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: backaged/go-hexagonal-architecture:v1
+    command: serve-rest -c "/etc/config.yaml"
+    ports:
+      - 8000:8000
+    depends_on:
+      - mongo
+      - redis
+    volumes:
+      - ./config.yaml:/etc/config.yaml
+    
+  redis:
+    image: "redis:alpine"
+    restart: always
+    ports: 
+      - "6379:6379"
+
   mongo:
     image: mongo:4
     restart: always
@@ -10,16 +30,4 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
-
-  task:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: BackAged/go-hexagonal-architecture:v1
-    command: serve -c "/etc/config.yaml"
-    ports:
-      - 8000:8000
-    depends_on:
-      - mongo
-    volumes:
-      - ./config.yaml:/etc/config.yaml
+    
